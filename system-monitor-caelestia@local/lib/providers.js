@@ -96,6 +96,15 @@ var CPUProvider = class CPUProvider {
         return this.histories.slice(1);
     }
 
+    get lastCores() {
+        let out = [];
+        for (let i = 1; i < this.histories.length; i++) {
+            let h = this.histories[i];
+            out.push(h.length ? h[h.length - 1] : 0);
+        }
+        return out;
+    }
+
     get lastTotal() {
         let h = this.histories[0];
         return h.length ? h[h.length - 1] : 0;

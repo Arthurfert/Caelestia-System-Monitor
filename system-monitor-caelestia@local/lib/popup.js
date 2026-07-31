@@ -146,17 +146,39 @@ var Dashboard = class Dashboard {
 
         let sx = cx + ringR + 10;
         let sw = (x + w - pad) - sx;
-        if (sw > 20) {
-            let sy = top + 4;
-            let sh = availH - 6;
-            let colors = [Draw.PALETTE.tertiary, Draw.PALETTE.cyan, Draw.PALETTE.purple,
-                          Draw.PALETTE.secondary, Draw.PALETTE.success];
-            let cores = cpu.coreHistories;
-            for (let i = 0; i < cores.length; i++)
-                Draw.drawSparkline(ctx, cores[i], sx, sy, sw, sh,
-                    colors[i % colors.length], { lineWidth: 1, fillAlpha: 0 });
-            Draw.drawSparkline(ctx, cpu.totalHistory, sx, sy, sw, sh,
-                Draw.PALETTE.primary, { lineWidth: 1.8, fillAlpha: 0.12 });
+        if (sw > 20)
+            this._drawCoreGrid(ctx, area, cpu.lastCores, sx, top, sw, availH);
+    }
+
+    _drawCoreGrid(ctx, area, cores, x, y, w, h) {
+        if (!cores || !cores.length) return;
+        let cols = 2;
+        let rows = Math.ceil(cores.length / cols);
+        let cw = w / cols;
+        let ch = h / rows;
+        let barH = Math.min(6, ch - 12);
+        let labelH = 10;
+        for (let i = 0; i < cores.length; i++) {
+            let v = cores[i];
+            let col = i % cols;
+            let row = Math.floor(i / cols);
+            let bx = x + col * cw;
+            let by = y + row * ch;
+            let color = v <= 40 ? Draw.PALETTE.cyan
+                      : v <= 70 ? Draw.PALETTE.tertiary
+                      : Draw.PALETTE.error;
+            this._drawText(area, ctx, 'C' + i, bx + 2, by, Draw.PALETTE.onSurfaceVariant,
+                { size: 7 });
+            this._drawText(area, ctx, Math.round(v) + '%', bx + cw - 2, by, color,
+                { size: 7, align: 'right' });
+            let bwy = by + labelH;
+            let bw = cw - 4;
+            Draw.fillRoundRect(ctx, bx + 2, bwy, bw, barH, barH / 2,
+                Draw.PALETTE.surfaceContainerHigh, 1);
+            if (v > 0.5) {
+                let fw = Math.max(2, Math.round(v / 100 * bw));
+                Draw.fillRoundRect(ctx, bx + 2, bwy, fw, barH, barH / 2, color, 1);
+            }
         }
     }
 
