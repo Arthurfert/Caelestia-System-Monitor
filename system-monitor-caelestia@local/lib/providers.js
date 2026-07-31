@@ -5,6 +5,8 @@ function _toString(bytes) {
     if (bytes === null || bytes === undefined) return null;
     if (typeof bytes === 'string') return bytes;
     try {
+        if (typeof bytes.get_data === 'function')
+            bytes = bytes.get_data();
         return new TextDecoder('utf-8').decode(bytes);
     } catch (e) {
         return null;
@@ -297,6 +299,8 @@ var TempProvider = class TempProvider {
         this._cpu = [];
         this._gpu = [];
         this._nvidiaSmi = null;
+        this._nvidiaSmiPending = false;
+        this.onChange = null;
         this._discover();
     }
 
@@ -388,22 +392,41 @@ var TempProvider = class TempProvider {
         let now = Date.now();
         if (this._nvidiaSmi && now - this._nvidiaSmi.at < 5000)
             return this._nvidiaSmi.value;
-        let value = null;
-        let available = false;
+        if (!this._nvidiaSmiPending)
+            this._nvidiaSmiFetch();
+        return this._nvidiaSmi ? this._nvidiaSmi.value : null;
+    }
+
+    _nvidiaSmiFetch() {
+        this._nvidiaSmiPending = true;
+        let proc = null;
         try {
-            let [ok, stdout] = GLib.spawn_command_line_sync(
-                'nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits');
-            if (ok) {
-                available = true;
-                let s = _toString(stdout);
-                if (s) s = s.trim();
-                let n = parseInt(s, 10);
-                if (!isNaN(n)) value = n;
-            }
+            proc = Gio.Subprocess.new(
+                ['nvidia-smi', '--query-gpu=temperature.gpu', '--format=csv,noheader,nounits'],
+                Gio.SubprocessFlags.STDOUT_PIPE);
         } catch (e) {
-            available = false;
+            this._nvidiaSmi = { value: null, at: Date.now(), available: false };
+            this._nvidiaSmiPending = false;
+            return;
         }
-        this._nvidiaSmi = { value: value, at: now, available: available };
-        return value;
+        proc.communicate_async(null, null, (p, res) => {
+            this._nvidiaSmiPending = false;
+            let value = null;
+            let available = false;
+            try {
+                let r = p.communicate_finish(res);
+                if (p.get_successful() && r && r[1]) {
+                    available = true;
+                    let s = _toString(r[1]);
+                    if (s) s = s.trim();
+                    let n = parseInt(s, 10);
+                    if (!isNaN(n)) value = n;
+                }
+            } catch (e) {
+                available = false;
+            }
+            this._nvidiaSmi = { value: value, at: Date.now(), available: available };
+            if (this.onChange) this.onChange();
+        });
     }
 };

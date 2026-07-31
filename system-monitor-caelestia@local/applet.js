@@ -39,6 +39,7 @@ class CaelestiaSysMon extends Applet.Applet {
             disk: new Providers.DiskProvider(),
             temp: new Providers.TempProvider()
         };
+        this.providers.temp.onChange = () => this._repaintAll();
 
         this._panelArea = new St.DrawingArea();
         this._panelArea.connect('repaint', () => this._paintPanel(this._panelArea));
@@ -85,6 +86,10 @@ class CaelestiaSysMon extends Applet.Applet {
         this.providers.net.tick();
         this.providers.disk.tick();
         this._setTooltip();
+        this._repaintAll();
+    }
+
+    _repaintAll() {
         if (this._panelArea)
             this._panelArea.queue_repaint();
         if (this.dashboard)
