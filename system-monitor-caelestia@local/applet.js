@@ -118,23 +118,30 @@ class CaelestiaSysMon extends Applet.Applet {
 
     _layoutPanel() {
         let vertical = this._orientation === St.Side.LEFT || this._orientation === St.Side.RIGHT;
-        let th = Math.max(10, this.panelHeight - 6);
-        let capLen = Math.max(26, Math.round(th * 1.6));
+        let d = this._ringDiameter();
         let gap = 6, pad = 3;
         let shown = (this.panelShowCpu ? 1 : 0) + (this.panelShowMemory ? 1 : 0);
         let logicalW, logicalH;
         if (shown === 0) {
             logicalW = 10;
-            logicalH = th;
+            logicalH = d;
         } else if (!vertical) {
-            logicalW = shown * capLen + (shown - 1) * gap + pad * 2;
-            logicalH = th + pad;
+            logicalW = shown * d + (shown - 1) * gap + pad * 2;
+            logicalH = d + pad;
         } else {
-            logicalH = shown * capLen + (shown - 1) * gap + pad * 2;
-            logicalW = th + pad;
+            logicalH = shown * d + (shown - 1) * gap + pad * 2;
+            logicalW = d + pad;
         }
         this._panelArea.width = Math.max(1, Math.round(logicalW * global.ui_scale));
         this._panelArea.height = Math.max(1, Math.round(logicalH * global.ui_scale));
+    }
+
+    _ringDiameter() {
+        return Math.max(12, Math.round(this.panelHeight * 0.66));
+    }
+
+    _ringThickness(d) {
+        return Math.max(3, Math.round(d * 0.22));
     }
 
     _paintPanel(area) {
@@ -151,9 +158,9 @@ class CaelestiaSysMon extends Applet.Applet {
         let memData = this.providers.mem.data;
         let mem = memData ? memData.usedPct / 100 : 0;
 
-        let th = Math.max(10, this.panelHeight - 6);
-        let capLen = Math.max(26, Math.round(th * 1.6));
-        let gap = 6, pad = 3;
+        let d = this._ringDiameter();
+        let thk = this._ringThickness(d);
+        let gap = 6;
         let track = Draw.PALETTE.surfaceContainerHigh;
         let shown = (this.panelShowCpu ? 1 : 0) + (this.panelShowMemory ? 1 : 0);
 
@@ -166,62 +173,38 @@ class CaelestiaSysMon extends Applet.Applet {
             return;
         }
 
+        let items = [];
+        if (this.panelShowCpu) items.push({ label: 'C', pct: cpu, color: Draw.PALETTE.primary });
+        if (this.panelShowMemory) items.push({ label: 'M', pct: mem, color: Draw.PALETTE.cyan });
+
+        let cx, cy;
         if (!vertical) {
-            let y = Math.max(0, Math.round((H - th) / 2));
-            let x2 = pad;
-            if (this.panelShowCpu) {
-                this._drawCapsule(ctx, x2, y, capLen, th, cpu, Draw.PALETTE.primary, track, false);
-                let lbl = Math.round(cpu * 100) + '%';
-                Draw.drawText(area, ctx, 'C', x2 + 5, y + Math.round((th - 9) / 2),
-                    Draw.PALETTE.primary, { size: 7, weight: 'bold', font: 'Sans' });
-                Draw.drawText(area, ctx, lbl, x2 + capLen - 4, y + Math.round((th - 9) / 2),
-                    Draw.PALETTE.onSurface, { size: 7, align: 'right', font: 'Sans' });
-                x2 += capLen + gap;
-            }
-            if (this.panelShowMemory) {
-                this._drawCapsule(ctx, x2, y, capLen, th, mem, Draw.PALETTE.cyan, track, false);
-                let lbl = Math.round(mem * 100) + '%';
-                Draw.drawText(area, ctx, 'M', x2 + 5, y + Math.round((th - 9) / 2),
-                    Draw.PALETTE.cyan, { size: 7, weight: 'bold', font: 'Sans' });
-                Draw.drawText(area, ctx, lbl, x2 + capLen - 4, y + Math.round((th - 9) / 2),
-                    Draw.PALETTE.onSurface, { size: 7, align: 'right', font: 'Sans' });
-            }
+            let total = items.length * d + (items.length - 1) * gap;
+            cx = (W - total) / 2 + d / 2;
+            cy = H / 2;
         } else {
-            let x = Math.max(0, Math.round((W - th) / 2));
-            let y2 = pad;
-            if (this.panelShowCpu) {
-                this._drawCapsule(ctx, x, y2, th, capLen, cpu, Draw.PALETTE.primary, track, true);
-                let lbl = Math.round(cpu * 100) + '%';
-                Draw.drawText(area, ctx, 'C', x + Math.round((th - 7) / 2), y2 + 5,
-                    Draw.PALETTE.primary, { size: 7, weight: 'bold', font: 'Sans' });
-                Draw.drawText(area, ctx, lbl, x + Math.round((th - 7) / 2), y2 + capLen - 4,
-                    Draw.PALETTE.onSurface, { size: 7, font: 'Sans' });
-                y2 += capLen + gap;
-            }
-            if (this.panelShowMemory) {
-                this._drawCapsule(ctx, x, y2, th, capLen, mem, Draw.PALETTE.cyan, track, true);
-                let lbl = Math.round(mem * 100) + '%';
-                Draw.drawText(area, ctx, 'M', x + Math.round((th - 7) / 2), y2 + 5,
-                    Draw.PALETTE.cyan, { size: 7, weight: 'bold', font: 'Sans' });
-                Draw.drawText(area, ctx, lbl, x + Math.round((th - 7) / 2), y2 + capLen - 4,
-                    Draw.PALETTE.onSurface, { size: 7, font: 'Sans' });
-            }
+            let total = items.length * d + (items.length - 1) * gap;
+            cx = W / 2;
+            cy = (H - total) / 2 + d / 2;
+        }
+        for (let it of items) {
+            this._drawRingIndicator(ctx, area, cx, cy, d, thk, it.pct, it.color, track, it.label);
+            if (!vertical) cx += d + gap;
+            else cy += d + gap;
         }
         ctx.restore();
     }
 
-    _drawCapsule(ctx, x, y, w, h, fraction, color, track, vertical) {
-        Draw.fillRoundRect(ctx, x, y, w, h, h / 2, track, 1);
-        if (fraction <= 0.001) return;
-        if (!vertical) {
-            let len = Math.max(1.5, fraction * (w - 3));
-            let r = Math.min((h - 3) / 2, len / 2);
-            Draw.fillRoundRect(ctx, x + 1.5, y + 1.5, len, h - 3, r, color, 0.92);
-        } else {
-            let len = Math.max(1.5, fraction * (h - 3));
-            let r = Math.min((w - 3) / 2, len / 2);
-            Draw.fillRoundRect(ctx, x + 1.5, y + 1.5, w - 3, len, r, color, 0.92);
-        }
+    _drawRingIndicator(ctx, area, cx, cy, d, thk, fraction, color, track, label) {
+        let r = d / 2;
+        Draw.drawRing(ctx, cx, cy, r, thk, fraction, color, track);
+        let fs = Math.max(6, Math.round(d * 0.3));
+        this._drawText(area, ctx, Math.round(fraction * 100) + '%', cx, cy - Math.round(fs * 0.62),
+            Draw.PALETTE.onSurface, { size: fs, align: 'center', font: 'Sans' });
+    }
+
+    _drawText(area, ctx, text, x, y, hex, opts) {
+        return Draw.drawText(area, ctx, text, x, y, hex, opts);
     }
 
     on_applet_clicked(event) {
