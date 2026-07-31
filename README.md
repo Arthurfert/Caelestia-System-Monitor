@@ -1,7 +1,6 @@
-# linux-applet
+# Caelestia System Monitor
 
-A custom Cinnamon applet: **Caelestia System Monitor** - a system monitor
-(CPU, memory, network, disk I/O, temperatures) with Caelestia styling.
+A custom Cinnamon applet: a system monitor (CPU, memory, network, disk I/O, temperatures) with Caelestia styling.
 
 ## Install
 
