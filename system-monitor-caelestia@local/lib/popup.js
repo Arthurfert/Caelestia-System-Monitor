@@ -1,0 +1,321 @@
+const St = imports.gi.St;
+const GLib = imports.gi.GLib;
+const Draw = require('./lib/draw');
+const Providers = require('./lib/providers');
+
+var Dashboard = class Dashboard {
+    constructor(applet) {
+        this.applet = applet;
+        this.w = 520;
+        this.h = 440;
+        this.area = new St.DrawingArea();
+        this.area.connect('repaint', () => this._paint(this.area));
+        this._relayout();
+    }
+
+    get actor() {
+        return this.area;
+    }
+
+    _relayout() {
+        this.w = this.applet.popupWidth || 520;
+        this.h = this.applet.popupHeight || 390;
+        this.area.width = Math.max(1, Math.round(this.w * global.ui_scale));
+        this.area.height = Math.max(1, Math.round(this.h * global.ui_scale));
+        this.area.queue_repaint();
+    }
+
+    queueRepaint() {
+        this.area.queue_repaint();
+    }
+
+    _measureText(area, text, opts) {
+        let layout = area.create_pango_layout(text);
+        let desc = imports.gi.Pango.font_description_from_string(
+            (opts.font || 'monospace') + ' ' + (opts.weight || 'normal') + ' ' + (opts.size || 10) + 'px');
+        layout.set_font_description(desc);
+        return layout.get_pixel_size();
+    }
+
+    _drawText(area, ctx, text, x, y, hex, opts) {
+        opts = opts || {};
+        if (opts.size === undefined) opts.size = this.applet.fontSize || 10;
+        return Draw.drawText(area, ctx, text, x, y, hex, opts);
+    }
+
+    _paint(area) {
+        let ctx = area.get_context();
+        let s = global.ui_scale;
+        ctx.save();
+        ctx.scale(s, s);
+
+        let W = this.w, H = this.h;
+        let applet = this.applet;
+        let P = applet.providers;
+
+        Draw.fillRoundRect(ctx, 0, 0, W, H, 16, Draw.PALETTE.background, 0.94);
+        Draw.strokeRoundRect(ctx, 0.5, 0.5, W - 1, H - 1, 16, Draw.PALETTE.outlineVariant, 0.5, 1);
+
+        let m = 14, gap = 10, headerH = 24, tempsH = 34;
+        let rowsH = H - (m + headerH + gap + tempsH + m);
+        let row1H = Math.round(rowsH * 0.58);
+        let row2H = rowsH - row1H;
+        let colW = (W - 2 * m - gap) / 2;
+
+        let y = m;
+        this._drawHeader(ctx, area, W, m, headerH);
+        y += headerH + gap;
+
+        if (applet.showCpu)
+            this._drawCpuPanel(ctx, area, m, y, colW, row1H);
+        if (applet.showMemory)
+            this._drawMemPanel(ctx, area, m + colW + gap, y, colW, row1H);
+        y += row1H + gap;
+
+        if (applet.showNetwork)
+            this._drawNetPanel(ctx, area, m, y, colW, row2H);
+        if (applet.showDisk)
+            this._drawDiskPanel(ctx, area, m + colW + gap, y, colW, row2H);
+        y += row2H + gap;
+
+        if (applet.showTemps)
+            this._drawTempsStrip(ctx, area, m, y, W - 2 * m, tempsH);
+
+        ctx.restore();
+    }
+
+    _drawHeader(ctx, area, W, m, headerH) {
+        let host = GLib.get_host_name();
+        this._drawText(area, ctx, '●  ' + host, m, m + 5, Draw.PALETTE.onSurface,
+            { size: 11, weight: 'bold', font: 'Sans' });
+
+        let up = Draw.formatUptime(this._uptimeSeconds());
+        let load = this._loadAverage();
+        let right = '';
+        if (up) right += up;
+        if (load) right += (right ? '   ' : '') + 'load ' + load;
+        if (right)
+            this._drawText(area, ctx, right, W - m, m + 7, Draw.PALETTE.onSurfaceVariant,
+                { size: 9.5, align: 'right' });
+    }
+
+    _uptimeSeconds() {
+        let d = Providers.readFile('/proc/uptime');
+        if (!d) return 0;
+        return parseFloat(d.trim().split(/\s+/)[0]) || 0;
+    }
+
+    _loadAverage() {
+        let d = Providers.readFile('/proc/loadavg');
+        if (!d) return null;
+        let p = d.trim().split(/\s+/);
+        return p[0] || null;
+    }
+
+    _drawPanelHeader(ctx, area, x, y, w, title, rightText, rightColor) {
+        this._drawText(area, ctx, title.toUpperCase(), x + 10, y + 3, Draw.PALETTE.onSurfaceVariant,
+            { size: 8.5, weight: 'bold' });
+        if (rightText !== undefined && rightText !== null)
+            this._drawText(area, ctx, rightText, x + w - 10, y + 2, rightColor || Draw.PALETTE.onSurface,
+                { size: 10, weight: 'bold', align: 'right' });
+        return 18;
+    }
+
+    _drawCpuPanel(ctx, area, x, y, w, h) {
+        let cpu = this.applet.providers.cpu;
+        Draw.fillRoundRect(ctx, x, y, w, h, 12, Draw.PALETTE.surfaceContainer, 1);
+        Draw.strokeRoundRect(ctx, x, y, w, h, 12, Draw.PALETTE.outlineVariant, 0.35, 1);
+
+        let pad = 10;
+        let headerH = this._drawPanelHeader(ctx, area, x, y, w, 'CPU',
+            Math.round(cpu.lastTotal) + '%', Draw.PALETTE.primary);
+
+        let top = y + headerH + 2;
+        let availH = h - headerH - pad - 2;
+        let ringR = Math.min(34, Math.max(20, Math.round(availH / 2) - 4));
+        let ringTh = 7;
+        let cx = x + pad + ringR + 4;
+        let cy = top + Math.round(availH / 2) - 2;
+
+        Draw.drawRing(ctx, cx, cy, ringR, ringTh, cpu.lastTotal / 100,
+            Draw.PALETTE.primary, Draw.PALETTE.surfaceContainerHigh);
+        this._drawText(area, ctx, Math.round(cpu.lastTotal) + '%', cx, cy - 8,
+            Draw.PALETTE.onSurface, { size: 14, weight: 'bold', align: 'center' });
+        this._drawText(area, ctx, 'TOTAL', cx, cy + 5,
+            Draw.PALETTE.onSurfaceVariant, { size: 7, align: 'center' });
+
+        let sx = cx + ringR + 10;
+        let sw = (x + w - pad) - sx;
+        if (sw > 20) {
+            let sy = top + 4;
+            let sh = availH - 6;
+            let colors = [Draw.PALETTE.tertiary, Draw.PALETTE.cyan, Draw.PALETTE.purple,
+                          Draw.PALETTE.secondary, Draw.PALETTE.success];
+            let cores = cpu.coreHistories;
+            for (let i = 0; i < cores.length; i++)
+                Draw.drawSparkline(ctx, cores[i], sx, sy, sw, sh,
+                    colors[i % colors.length], { lineWidth: 1, fillAlpha: 0 });
+            Draw.drawSparkline(ctx, cpu.totalHistory, sx, sy, sw, sh,
+                Draw.PALETTE.primary, { lineWidth: 1.8, fillAlpha: 0.12 });
+        }
+    }
+
+    _drawMemPanel(ctx, area, x, y, w, h) {
+        let d = this.applet.providers.mem.data;
+        if (!d || !d.total) return;
+        Draw.fillRoundRect(ctx, x, y, w, h, 12, Draw.PALETTE.surfaceContainer, 1);
+        Draw.strokeRoundRect(ctx, x, y, w, h, 12, Draw.PALETTE.outlineVariant, 0.35, 1);
+
+        let pad = 10;
+        let headerH = this._drawPanelHeader(ctx, area, x, y, w, 'MEMORY',
+            Draw.formatBytes(d.total), Draw.PALETTE.secondary);
+
+        let availW = w - 2 * pad;
+        let by = y + headerH + 4;
+
+        let segs = [
+            { pct: d.usedCore / d.total, hex: Draw.PALETTE.primaryContainer },
+            { pct: d.cache / d.total, hex: Draw.PALETTE.cyan },
+            { pct: d.buffers / d.total, hex: Draw.PALETTE.secondaryContainer },
+            { pct: d.free / d.total, hex: Draw.PALETTE.surfaceContainerHst }
+        ];
+        ctx.save();
+        Draw.roundedRect(ctx, x + pad, by, availW, 16, 8);
+        ctx.clip();
+        let ax = x + pad;
+        for (let sg of segs) {
+            let sw = sg.pct * availW;
+            if (sw < 0.5) { ax += sw; continue; }
+            ctx.rectangle(ax, by, sw, 16);
+            Draw.setSourceHex(ctx, sg.hex, 1);
+            ctx.fill();
+            ax += sw;
+        }
+        ctx.restore();
+
+        let ly = by + 16 + 10;
+        let lh = 14;
+        let rows = [
+            { label: 'used', value: d.usedCore, hex: Draw.PALETTE.primaryContainer },
+            { label: 'cache', value: d.cache, hex: Draw.PALETTE.cyan },
+            { label: 'buffers', value: d.buffers, hex: Draw.PALETTE.secondary },
+            { label: 'free', value: d.free, hex: Draw.PALETTE.outline }
+        ];
+        for (let i = 0; i < rows.length; i++) {
+            let r = rows[i];
+            let lyy = ly + i * lh;
+            this._drawText(area, ctx, r.label, x + pad, lyy, Draw.PALETTE.onSurfaceVariant, { size: 8 });
+            this._drawText(area, ctx, Draw.formatBytes(r.value), x + w - pad, lyy, r.hex,
+                { size: 8, align: 'right' });
+        }
+
+        if (d.swapTotal > 0) {
+            let swy = ly + rows.length * lh + 6;
+            this._drawText(area, ctx, 'swap', x + pad, swy, Draw.PALETTE.onSurfaceVariant, { size: 8 });
+            let swBarW = availW - 38 - 8;
+            let bx = x + pad + 38;
+            Draw.fillRoundRect(ctx, bx, swy + 2, swBarW, 8, 4, Draw.PALETTE.surfaceContainerHigh, 1);
+            if (d.swapPct > 0) {
+                ctx.save();
+                Draw.roundedRect(ctx, bx, swy + 2, swBarW, 8, 4);
+                ctx.clip();
+                ctx.rectangle(bx, swy + 2, d.swapPct / 100 * swBarW, 8);
+                Draw.setSourceHex(ctx, Draw.PALETTE.tertiary, 1);
+                ctx.fill();
+                ctx.restore();
+            }
+            this._drawText(area, ctx, Draw.formatBytes(d.swapUsed), bx + swBarW + 6, swy,
+                Draw.PALETTE.tertiary, { size: 8 });
+        }
+    }
+
+    _drawGraphPanel(ctx, area, x, y, w, h, title, headerRight, headerColor,
+                    series, labels, labelColor) {
+        Draw.fillRoundRect(ctx, x, y, w, h, 12, Draw.PALETTE.surfaceContainer, 1);
+        Draw.strokeRoundRect(ctx, x, y, w, h, 12, Draw.PALETTE.outlineVariant, 0.35, 1);
+
+        let pad = 10;
+        let headerH = this._drawPanelHeader(ctx, area, x, y, w, title, headerRight, headerColor);
+        let top = y + headerH + 2;
+        let availW = w - 2 * pad;
+        let availH = h - headerH - pad - 4;
+        let gH = Math.max(10, Math.floor((availH - 6) / 2));
+        let gx = x + pad, gy = top + 2;
+
+        series[0].draw(ctx, gx, gy, availW, gH);
+        this._drawText(area, ctx, labels[0], gx + 2, gy + 2, labelColor[0], { size: 7 });
+        let gy2 = gy + gH + 6;
+        series[1].draw(ctx, gx, gy2, availW, gH);
+        this._drawText(area, ctx, labels[1], gx + 2, gy2 + 2, labelColor[1], { size: 7 });
+    }
+
+    _drawNetPanel(ctx, area, x, y, w, h) {
+        let net = this.applet.providers.net;
+        let right = '▼ ' + Draw.formatBytesShort(net.last.down, true) +
+                    '   ▲ ' + Draw.formatBytesShort(net.last.up, true);
+        let down = { draw: (c, gx, gy, gw, gh) =>
+            Draw.drawSparkline(c, net.downHistory, gx, gy, gw, gh, Draw.PALETTE.tertiary,
+                { lineWidth: 1.5, fillAlpha: 0.15 }) };
+        let up = { draw: (c, gx, gy, gw, gh) =>
+            Draw.drawSparkline(c, net.upHistory, gx, gy, gw, gh, Draw.PALETTE.cyan,
+                { lineWidth: 1.5, fillAlpha: 0.15 }) };
+        this._drawGraphPanel(ctx, area, x, y, w, h, 'NETWORK', right, Draw.PALETTE.tertiary,
+            [down, up],
+            ['▼ ' + Draw.formatBytes(net.last.down, true), '▲ ' + Draw.formatBytes(net.last.up, true)],
+            [Draw.PALETTE.tertiary, Draw.PALETTE.cyan]);
+    }
+
+    _drawDiskPanel(ctx, area, x, y, w, h) {
+        let disk = this.applet.providers.disk;
+        let right = 'R ' + Draw.formatBytesShort(disk.last.read, true) +
+                    '   W ' + Draw.formatBytesShort(disk.last.write, true);
+        let rd = { draw: (c, gx, gy, gw, gh) =>
+            Draw.drawSparkline(c, disk.readHistory, gx, gy, gw, gh, Draw.PALETTE.primary,
+                { lineWidth: 1.5, fillAlpha: 0.15 }) };
+        let wr = { draw: (c, gx, gy, gw, gh) =>
+            Draw.drawSparkline(c, disk.writeHistory, gx, gy, gw, gh, Draw.PALETTE.secondary,
+                { lineWidth: 1.5, fillAlpha: 0.15 }) };
+        this._drawGraphPanel(ctx, area, x, y, w, h, 'DISK', right, Draw.PALETTE.primary,
+            [rd, wr],
+            ['R ' + Draw.formatBytes(disk.last.read, true), 'W ' + Draw.formatBytes(disk.last.write, true)],
+            [Draw.PALETTE.primary, Draw.PALETTE.secondary]);
+    }
+
+    _drawTempsStrip(ctx, area, x, y, w, h) {
+        let temp = this.applet.providers.temp;
+        Draw.fillRoundRect(ctx, x, y, w, h, 12, Draw.PALETTE.surfaceContainer, 1);
+        Draw.strokeRoundRect(ctx, x, y, w, h, 12, Draw.PALETTE.outlineVariant, 0.35, 1);
+
+        this._drawText(area, ctx, 'TEMPS', x + 10, y + Math.round((h - 9) / 2) + 1,
+            Draw.PALETTE.onSurfaceVariant, { size: 8.5, weight: 'bold' });
+
+        let ax = x + 10 + 48;
+        let sensors = temp.cpus.concat(temp.gpus);
+        for (let s of sensors)
+            ax = this._tempPill(ctx, area, ax, y, h, s.label, s.temp);
+
+        if (!sensors.length)
+            this._drawText(area, ctx, 'no sensors found', x + 10 + 48, y + Math.round((h - 9) / 2) + 1,
+                Draw.PALETTE.outline, { size: 8.5 });
+    }
+
+    _tempPill(ctx, area, x, y, h, label, temp) {
+        let color = temp <= 60 ? Draw.PALETTE.cyan
+                  : temp <= 80 ? Draw.PALETTE.tertiary
+                  : Draw.PALETTE.error;
+        let text = label + ' ' + temp + '°C';
+        let [tw] = this._measureText(area, text, { size: 9 });
+        let padX = 8, dotR = 3;
+        let pillW = padX + dotR * 2 + 4 + tw + padX;
+        let pillH = h - 8;
+        let py = y + Math.round((h - pillH) / 2);
+        Draw.fillRoundRect(ctx, x, py, pillW, pillH, pillH / 2, Draw.PALETTE.surfaceContainerHigh, 1);
+        ctx.newPath();
+        ctx.arc(x + padX + dotR + 2, py + pillH / 2, dotR, 0, 2 * Math.PI);
+        Draw.setSourceHex(ctx, color, 1);
+        ctx.fill();
+        this._drawText(area, ctx, text, x + padX + dotR * 2 + 4, py + Math.round((pillH - 9) / 2) + 1,
+            color, { size: 9 });
+        return x + pillW + 8;
+    }
+};

@@ -1,0 +1,85 @@
+{
+    "head-layout": {
+        "type": "header",
+        "description": "Dashboard"
+    },
+    "refresh-interval": {
+        "type": "spinbutton",
+        "default": 2000,
+        "min": 500,
+        "max": 10000,
+        "step": 100,
+        "units": "ms",
+        "description": "Update interval"
+    },
+    "popup-width": {
+        "type": "spinbutton",
+        "default": 520,
+        "min": 360,
+        "max": 900,
+        "step": 10,
+        "units": "px",
+        "description": "Popup dashboard width"
+    },
+    "popup-height": {
+        "type": "spinbutton",
+        "default": 440,
+        "min": 280,
+        "max": 700,
+        "step": 10,
+        "units": "px",
+        "description": "Popup dashboard height"
+    },
+    "font-size": {
+        "type": "spinbutton",
+        "default": 10,
+        "min": 8,
+        "max": 16,
+        "step": 1,
+        "units": "px",
+        "description": "Base font size"
+    },
+    "head-sections": {
+        "type": "header",
+        "description": "Sections"
+    },
+    "show-cpu": {
+        "type": "switch",
+        "default": true,
+        "description": "Show CPU panel"
+    },
+    "show-memory": {
+        "type": "switch",
+        "default": true,
+        "description": "Show memory panel"
+    },
+    "show-network": {
+        "type": "switch",
+        "default": true,
+        "description": "Show network panel"
+    },
+    "show-disk": {
+        "type": "switch",
+        "default": true,
+        "description": "Show disk I/O panel"
+    },
+    "show-temps": {
+        "type": "switch",
+        "default": true,
+        "description": "Show temperatures strip"
+    },
+    "head-panel": {
+        "type": "header",
+        "description": "Panel indicator"
+    },
+    "panel-show-cpu": {
+        "type": "switch",
+        "default": true,
+        "description": "Show CPU mini-bar in panel"
+    },
+    "panel-show-memory": {
+        "type": "switch",
+        "default": true,
+        "description": "Show memory mini-bar in panel"
+    }
+}
