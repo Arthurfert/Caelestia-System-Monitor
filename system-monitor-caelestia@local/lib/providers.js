@@ -147,18 +147,24 @@ var MemProvider = class MemProvider {
                 }
             }
         }
+        let available = info.MemAvailable;
+        if (!available) {
+            available = free + cache + buffers;
+            if (available > total) available = total;
+        }
+        let used = total - available;
         let swapTotal = info.SwapTotal || 0;
         let swapUsed = swapTotal - (info.SwapFree || 0);
         this._last = {
             total: total,
-            used: total - free,
+            used: used,
             usedCore: usedCore,
             cache: cache,
             buffers: buffers,
             free: free,
             swapTotal: swapTotal,
             swapUsed: swapUsed,
-            usedPct: total > 0 ? clamp((total - free) / total * 100, 0, 100) : 0,
+            usedPct: total > 0 ? clamp(used / total * 100, 0, 100) : 0,
             swapPct: swapTotal > 0 ? clamp(swapUsed / swapTotal * 100, 0, 100) : 0
         };
     }
