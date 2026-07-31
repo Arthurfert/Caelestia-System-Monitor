@@ -5,9 +5,18 @@ DEST        := $(INSTALL_DIR)/$(UUID)
 
 JS_FILES := $(shell find $(APPLET_DIR) -name '*.js')
 
-.PHONY: all install uninstall reload check lint
+.PHONY: all help install uninstall reload check
 
-all: check
+all: check install reload
+
+help:
+	@echo "=========== Makefile commands ============="
+	@echo "make all             - check, then install and reload"
+	@echo "make install         - check then copy to your applets directory"
+	@echo "make uninstall       - uninstall the applet from your system"
+	@echo "make reload          - reloads Cinnamon to update your applets"
+	@echo "make check           - checks the javascript syntax"
+	@echo "==========================================="
 
 install: check
 	@echo "==> Installing $(UUID) to $(DEST)"
@@ -37,5 +46,3 @@ check:
 	else \
 		echo "    no JS interpreter found; skipping"; \
 	fi
-
-lint: check

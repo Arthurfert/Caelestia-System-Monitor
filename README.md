@@ -5,10 +5,8 @@ A custom Cinnamon applet: a system monitor (CPU, memory, network, disk I/O, temp
 ## Install
 
 ```bash
-make install
+make all
 ```
-
-Add it to your panel: right-click the panel → **Applets** → **Caelestia System Monitor**.
 
 ## Uninstall
 
