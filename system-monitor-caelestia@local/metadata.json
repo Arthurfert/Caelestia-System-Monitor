@@ -1,7 +1,7 @@
 {
     "uuid": "system-monitor-caelestia@local",
     "name": "Caelestia System Monitor",
-    "description": "gtop-style system monitor with Caelestia styling: CPU, memory, network, disk I/O and temperature charts in a popup dashboard.",
+    "description": "system monitor with Caelestia styling: CPU, memory, network, disk I/O and temperature charts in a popup dashboard.",
     "icon": "utilities-system-monitor",
     "max-instances": "1"
 }
