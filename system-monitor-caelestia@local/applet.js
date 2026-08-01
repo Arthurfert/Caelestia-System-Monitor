@@ -146,7 +146,7 @@ class CaelestiaSysMon extends Applet.Applet {
     }
 
     _ringThickness(d) {
-        return Math.max(3, Math.round(d * 0.22));
+        return Math.max(2, Math.round(d * 0.12));
     }
 
     _paintPanel(area) {
