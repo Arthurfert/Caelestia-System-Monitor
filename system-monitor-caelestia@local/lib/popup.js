@@ -326,17 +326,18 @@ var Dashboard = class Dashboard {
                   : temp <= 80 ? Draw.PALETTE.tertiary
                   : Draw.PALETTE.error;
         let text = label + ' ' + temp + '°C';
-        let [tw] = this._measureText(area, text, { size: 9 });
+        let [tw, th] = this._measureText(area, text, { size: 9 });
         let padX = 8, dotR = 3;
         let pillW = padX + dotR * 2 + 4 + tw + padX;
         let pillH = h - 8;
         let py = y + Math.round((h - pillH) / 2);
+        let cy = py + pillH / 2;
         Draw.fillRoundRect(ctx, x, py, pillW, pillH, pillH / 2, Draw.PALETTE.surfaceContainerHigh, 1);
         ctx.newPath();
-        ctx.arc(x + padX + dotR + 2, py + pillH / 2, dotR, 0, 2 * Math.PI);
+        ctx.arc(x + padX + dotR + 2, cy, dotR, 0, 2 * Math.PI);
         Draw.setSourceHex(ctx, color, 1);
         ctx.fill();
-        this._drawText(area, ctx, text, x + padX + dotR * 2 + 4, py + Math.round((pillH - 9) / 2) + 1,
+        this._drawText(area, ctx, text, x + padX + dotR * 2 + 4, cy - Math.round(th / 2),
             color, { size: 9 });
         return x + pillW + 8;
     }
