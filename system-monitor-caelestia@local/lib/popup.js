@@ -195,11 +195,12 @@ var Dashboard = class Dashboard {
         let availW = w - 2 * pad;
         let by = y + headerH + 4;
 
+        let freeVal = Math.max(0, d.total - d.used - d.cache - d.buffers);
         let segs = [
-            { pct: d.usedCore / d.total, hex: Draw.PALETTE.primaryContainer },
+            { pct: d.used / d.total, hex: Draw.PALETTE.primaryContainer },
             { pct: d.cache / d.total, hex: Draw.PALETTE.cyan },
             { pct: d.buffers / d.total, hex: Draw.PALETTE.secondaryContainer },
-            { pct: d.free / d.total, hex: Draw.PALETTE.surfaceContainerHst }
+            { pct: freeVal / d.total, hex: Draw.PALETTE.surfaceContainerHst }
         ];
         ctx.save();
         Draw.roundedRect(ctx, x + pad, by, availW, 16, 8);
@@ -218,10 +219,10 @@ var Dashboard = class Dashboard {
         let ly = by + 16 + 10;
         let lh = 14;
         let rows = [
-            { label: 'used', value: d.usedCore, hex: Draw.PALETTE.primaryContainer },
+            { label: 'used', value: d.used, hex: Draw.PALETTE.primaryContainer },
             { label: 'cache', value: d.cache, hex: Draw.PALETTE.cyan },
             { label: 'buffers', value: d.buffers, hex: Draw.PALETTE.secondary },
-            { label: 'free', value: d.free, hex: Draw.PALETTE.outline }
+            { label: 'free', value: freeVal, hex: Draw.PALETTE.outline }
         ];
         for (let i = 0; i < rows.length; i++) {
             let r = rows[i];
