@@ -17,11 +17,11 @@ var PALETTE = {
     primaryContainer:     '#7171ac',
     secondary:            '#c6c4e0',
     secondaryContainer:   '#45455c',
-    tertiary:             '#f5b2e0',
-    tertiaryContainer:    '#bb7da9',
-    error:                '#ffb4ab',
+    tertiary:             '#f5cdb2',
+    tertiaryContainer:    '#bba27d',
+    error:                '#ff6c5c',
     cyan:                 '#44def5',
-    purple:               '#ac73ff',
+    purple:               '#7573ff',
     success:              '#B5CCBA',
 };
 
