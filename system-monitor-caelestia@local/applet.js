@@ -31,6 +31,17 @@ class CaelestiaSysMon extends Applet.Applet {
         this.settings.bindProperty(Settings.BindingDirection.IN, 'show-temps', 'showTemps', this._onSettingsChanged, null);
         this.settings.bindProperty(Settings.BindingDirection.IN, 'panel-show-cpu', 'panelShowCpu', this._onSettingsChanged, null);
         this.settings.bindProperty(Settings.BindingDirection.IN, 'panel-show-memory', 'panelShowMemory', this._onSettingsChanged, null);
+        this.settings.bindProperty(Settings.BindingDirection.IN, 'color-primary', 'colorPrimary', this._onSettingsChanged, null);
+        this.settings.bindProperty(Settings.BindingDirection.IN, 'color-secondary', 'colorSecondary', this._onSettingsChanged, null);
+        this.settings.bindProperty(Settings.BindingDirection.IN, 'color-tertiary', 'colorTertiary', this._onSettingsChanged, null);
+        this.settings.bindProperty(Settings.BindingDirection.IN, 'color-cyan', 'colorCyan', this._onSettingsChanged, null);
+        this.settings.bindProperty(Settings.BindingDirection.IN, 'color-error', 'colorError', this._onSettingsChanged, null);
+        this.settings.bindProperty(Settings.BindingDirection.IN, 'color-background', 'colorBackground', this._onSettingsChanged, null);
+        this.settings.bindProperty(Settings.BindingDirection.IN, 'color-surface', 'colorSurface', this._onSettingsChanged, null);
+        this.settings.bindProperty(Settings.BindingDirection.IN, 'color-surface-high', 'colorSurfaceHigh', this._onSettingsChanged, null);
+        this.settings.bindProperty(Settings.BindingDirection.IN, 'color-text', 'colorText', this._onSettingsChanged, null);
+        this.settings.bindProperty(Settings.BindingDirection.IN, 'color-text-variant', 'colorTextVariant', this._onSettingsChanged, null);
+        this._applyPalette();
 
         this.providers = {
             cpu: new Providers.CPUProvider(),
@@ -113,7 +124,29 @@ class CaelestiaSysMon extends Applet.Applet {
         this.set_applet_tooltip(parts.join('   ·   '));
     }
 
+    _applyPalette() {
+        let p = Draw.PALETTE;
+        let overrides = {
+            background: this.colorBackground,
+            surfaceContainer: this.colorSurface,
+            surfaceContainerHigh: this.colorSurfaceHigh,
+            onSurface: this.colorText,
+            onSurfaceVariant: this.colorTextVariant,
+            primary: this.colorPrimary,
+            secondary: this.colorSecondary,
+            tertiary: this.colorTertiary,
+            cyan: this.colorCyan,
+            error: this.colorError
+        };
+        for (let k in overrides) {
+            let h = Draw.normalizeHex(overrides[k]);
+            if (h) p[k] = h;
+        }
+        this._repaintAll();
+    }
+
     _onSettingsChanged() {
+        this._applyPalette();
         this._layoutPanel();
         if (this.dashboard)
             this.dashboard._relayout();

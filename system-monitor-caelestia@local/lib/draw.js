@@ -38,6 +38,28 @@ function hexToRgba(hex, alpha) {
     ];
 }
 
+function normalizeHex(color) {
+    if (typeof color !== 'string') return null;
+    color = color.trim();
+    let m;
+    if ((m = color.match(/^#([0-9a-f]{3})$/i)))
+        return '#' + m[1].split('').map(c => c + c).join('');
+    if ((m = color.match(/^#([0-9a-f]{6})$/i)))
+        return '#' + m[1];
+    if ((m = color.match(/^#([0-9a-f]{8})$/i)))
+        return '#' + m[1].substring(2);
+    if ((m = color.match(/^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*([0-9.]+))?\s*\)$/i))) {
+        let c = [m[1], m[2], m[3]].map(v => {
+            let n = parseFloat(v);
+            n = Math.round(n > 1 ? n : n * 255);
+            n = Math.max(0, Math.min(255, n));
+            return ('0' + n.toString(16)).slice(-2);
+        });
+        return '#' + c.join('');
+    }
+    return null;
+}
+
 function setSourceHex(ctx, hex, alpha) {
     ctx.setSourceRGBA.apply(ctx, hexToRgba(hex, alpha));
 }

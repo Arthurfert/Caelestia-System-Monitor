@@ -81,5 +81,59 @@
         "type": "switch",
         "default": true,
         "description": "Show memory mini-bar in panel"
+    },
+    "head-colors": {
+        "type": "header",
+        "description": "Colors"
+    },
+    "color-primary": {
+        "type": "colorchooser",
+        "default": "#c2c1ff",
+        "description": "Primary accent (CPU, disk read, memory used)"
+    },
+    "color-secondary": {
+        "type": "colorchooser",
+        "default": "#c6c4e0",
+        "description": "Secondary accent (memory total, disk write)"
+    },
+    "color-tertiary": {
+        "type": "colorchooser",
+        "default": "#f5b2e0",
+        "description": "Tertiary accent (network down, swap, warm temps)"
+    },
+    "color-cyan": {
+        "type": "colorchooser",
+        "default": "#44def5",
+        "description": "Cyan accent (memory cache, network up, cool temps)"
+    },
+    "color-error": {
+        "type": "colorchooser",
+        "default": "#ffb4ab",
+        "description": "Critical color (high usage, hot temps)"
+    },
+    "color-background": {
+        "type": "colorchooser",
+        "default": "#131317",
+        "description": "Dashboard background"
+    },
+    "color-surface": {
+        "type": "colorchooser",
+        "default": "#201f23",
+        "description": "Panel card background"
+    },
+    "color-surface-high": {
+        "type": "colorchooser",
+        "default": "#2a292e",
+        "description": "Ring track / bar background"
+    },
+    "color-text": {
+        "type": "colorchooser",
+        "default": "#e5e1e7",
+        "description": "Primary text color"
+    },
+    "color-text-variant": {
+        "type": "colorchooser",
+        "default": "#c8c5d1",
+        "description": "Secondary text color"
     }
 }
