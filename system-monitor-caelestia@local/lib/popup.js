@@ -90,10 +90,7 @@ var Dashboard = class Dashboard {
             { size: 11, weight: 'bold', font: 'Sans' });
 
         let up = Draw.formatUptime(this._uptimeSeconds());
-        let load = this._loadAverage();
-        let right = '';
-        if (up) right += up;
-        if (load) right += (right ? '   ' : '') + 'load ' + load;
+        let right = up ? 'Uptime : ' + up : '';
         if (right)
             this._drawText(area, ctx, right, W - m, m + 7, Draw.PALETTE.onSurfaceVariant,
                 { size: 9.5, align: 'right' });
@@ -103,13 +100,6 @@ var Dashboard = class Dashboard {
         let d = Providers.readFile('/proc/uptime');
         if (!d) return 0;
         return parseFloat(d.trim().split(/\s+/)[0]) || 0;
-    }
-
-    _loadAverage() {
-        let d = Providers.readFile('/proc/loadavg');
-        if (!d) return null;
-        let p = d.trim().split(/\s+/);
-        return p[0] || null;
     }
 
     _drawPanelHeader(ctx, area, x, y, w, title, rightText, rightColor) {
