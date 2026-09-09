@@ -57,7 +57,12 @@ var Dashboard = class Dashboard {
         Draw.strokeRoundRect(ctx, 0.5, 0.5, W - 1, H - 1, 16, Draw.PALETTE.outlineVariant, 0.5, 1);
 
         let m = 14, gap = 10, headerH = 24, tempsH = 34;
-        let rowsH = H - (m + headerH + gap + tempsH + m);
+        let hasTemps = !!applet.showTemps;
+        let effTempsH = hasTemps ? tempsH : 0;
+        let gaps = hasTemps ? 3 : 2;
+        let rowsH = H - (2 * m + headerH + effTempsH + gaps * gap);
+        // guard against tiny/negative sizes when popup is very small
+        if (rowsH < 40) rowsH = 40;
         let row1H = Math.round(rowsH * 0.58);
         let row2H = rowsH - row1H;
         let colW = (W - 2 * m - gap) / 2;
@@ -78,7 +83,7 @@ var Dashboard = class Dashboard {
             this._drawDiskPanel(ctx, area, m + colW + gap, y, colW, row2H);
         y += row2H + gap;
 
-        if (applet.showTemps)
+        if (hasTemps)
             this._drawTempsStrip(ctx, area, m, y, W - 2 * m, tempsH);
 
         ctx.restore();
