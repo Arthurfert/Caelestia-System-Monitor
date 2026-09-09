@@ -1,6 +1,12 @@
-# Caelestia System Monitor
+# Mint SuperApplet
 
-A custom Cinnamon applet: a system monitor (CPU, memory, network, disk I/O, temperatures) with Caelestia styling.
+A custom Cinnamon applet: a system monitor (CPU, memory, network, disk I/O, temperatures) with modern styling.
+
+## Next features
+
+- Battery popup window with percentage, time remaining and battery life
+- Weather forecast
+- Media player
 
 ## Install
 
@@ -24,13 +30,13 @@ make check    # JS syntax check
 ## Layout
 
 ```
-system-monitor-caelestia@local/
+mint-super-applet@local/
 ├── metadata.json
 ├── applet.js              # panel indicator + update loop
-├── stylesheet.css         # Caelestia popup theming
+├── stylesheet.css         # Applet popup theming
 ├── settings-schema.json   # configurable via right-click → Settings
 └── lib/
-    ├── draw.js            # Cairo helpers + Caelestia palette
+    ├── draw.js            # Cairo helpers + palette
     ├── providers.js       # /proc data (CPU, mem, net, disk, temps)
     └── popup.js           # dashboard popup rendering
 ```

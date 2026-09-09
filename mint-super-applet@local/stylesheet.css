@@ -1,7 +1,7 @@
-/* Caelestia System Monitor - scoped to this applet's popup only */
+/* Mint SuperApplet - scoped to this applet's popup only */
 
-.caelestia-popup,
-.caelestia-popup .popup-menu-content {
+.applet-popup,
+.applet-popup .popup-menu-content {
     background-color: transparent;
     border: 0px;
     border-radius: 16px;
@@ -10,11 +10,11 @@
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
-.caelestia-popup .popup-menu-content {
+.applet-popup .popup-menu-content {
     padding: 0px;
 }
 
-.caelestia-popup .popup-menu-item {
+.applet-popup .popup-menu-item {
     background-color: transparent;
     border-radius: 8px;
 }

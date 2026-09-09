@@ -1,0 +1,7 @@
+{
+    "uuid": "mint-super-applet@local",
+    "name": "Mint SuperApplet",
+    "description": "system monitor with modern styling: CPU, memory, network, disk I/O and temperature charts in a popup dashboard.",
+    "icon": "utilities-system-monitor",
+    "max-instances": "1"
+}

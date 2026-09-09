@@ -1,4 +1,4 @@
-UUID        := system-monitor-caelestia@local
+UUID        := mint-super-applet@local
 APPLET_DIR  := $(UUID)
 INSTALL_DIR := $(HOME)/.local/share/cinnamon/applets
 DEST        := $(INSTALL_DIR)/$(UUID)

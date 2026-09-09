@@ -4,13 +4,13 @@ const Settings = imports.ui.settings;
 const St = imports.gi.St;
 const GLib = imports.gi.GLib;
 
-const UUID = 'system-monitor-caelestia@local';
+const UUID = 'mint-super-applet@local';
 
 const Draw = require('./lib/draw');
 const Providers = require('./lib/providers');
 const Dashboard = require('./lib/popup').Dashboard;
 
-class CaelestiaSysMon extends Applet.Applet {
+class MintSuperApplet extends Applet.Applet {
     constructor(metadata, orientation, panelHeight, instanceId) {
         super(orientation, panelHeight, instanceId);
 
@@ -58,7 +58,7 @@ class CaelestiaSysMon extends Applet.Applet {
 
         this.menuManager = new PopupMenu.PopupMenuManager(this);
         this.menu = new Applet.AppletPopupMenu(this, orientation);
-        this.menu.setCustomStyleClass('caelestia-popup');
+        this.menu.setCustomStyleClass('applet-popup');
         this.menuManager.addMenu(this.menu);
 
         this._contentSection = new PopupMenu.PopupMenuSection();
@@ -71,7 +71,7 @@ class CaelestiaSysMon extends Applet.Applet {
                 this.dashboard.queueRepaint();
         });
 
-        this.set_applet_tooltip('Caelestia System Monitor');
+        this.set_applet_tooltip('Mint SuperApplet');
 
         this._layoutPanel();
         this._timeout = null;
@@ -273,5 +273,5 @@ class CaelestiaSysMon extends Applet.Applet {
 }
 
 function main(metadata, orientation, panelHeight, instanceId) {
-    return new CaelestiaSysMon(metadata, orientation, panelHeight, instanceId);
+    return new MintSuperApplet(metadata, orientation, panelHeight, instanceId);
 }
